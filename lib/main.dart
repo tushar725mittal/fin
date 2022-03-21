@@ -6,9 +6,14 @@ import 'package:fin/pages/login.dart';
 import 'package:fin/pages/profile.dart';
 import 'package:fin/pages/questionnaires.dart';
 import 'package:fin/pages/recreation.dart';
+import 'package:fin/pages/password_reset.dart';
+import 'package:fin/pages/signup.dart';
 import 'package:fin/pages/therapist.dart';
+import 'package:fin/pages/verify_page.dart';
 import 'package:fin/utils/routes.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:velocity_x/velocity_x.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,19 +25,40 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Fin',
-      initialRoute : "/login",
-      routes: {
-        MyRoutes.loginRoute : (context) => const LoginPage(),
-        MyRoutes.bufferRoute : (context) => const BufferPage(),
-        MyRoutes.profileRoute : (context) => const ProfilePage(),
-        MyRoutes.homeRoute : (context) => const HomePage(),
-        MyRoutes.chatRoomRoute : (context) => const ChatRoom(),
-        MyRoutes.questionnairesRoute: (context) => const Questionnaires(),
-        MyRoutes.therapistRoute : (context) => const Therapist(),
-        MyRoutes.journalRoute : (context) => const Journal(),
-        MyRoutes.recreationRoute : (context) => const Recreation(),
+    final Future<FirebaseApp> _initialization = Firebase.initializeApp();
+    return FutureBuilder(
+      future: _initialization,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          print("Something went wrong");
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+    return MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          routeInformationParser: VxInformationParser(),
+          routerDelegate: VxNavigator(
+            routes: {
+              "/": (_, __) => const MaterialPage(child: LoginPage()),
+              MyRoutes.loginRoute : (_, __) => const MaterialPage(child: LoginPage()),
+              MyRoutes.resetRoute : (_, __) => const MaterialPage(child: ResetPage()),
+              MyRoutes.signupRoute: (_, params) => MaterialPage(
+                      child: SignUp(
+                    email: params["email"],
+                  )),
+              MyRoutes.verifyRoute : (_, __) => const MaterialPage(child: VerifyScreen()),
+              MyRoutes.bufferRoute : (_, __) => const MaterialPage(child: BufferPage()),
+              MyRoutes.profileRoute : (_, __) => const MaterialPage(child: ProfilePage()),
+              MyRoutes.homeRoute : (_, __) => const MaterialPage(child: HomePage()),
+              MyRoutes.chatRoomRoute : (_, __) => const MaterialPage(child: ChatRoom()),
+              MyRoutes.questionnairesRoute: (_, __) => const MaterialPage(child: Questionnaires()),
+              MyRoutes.therapistRoute : (_, __) => const MaterialPage(child: Therapist()),
+              MyRoutes.journalRoute : (_, __) => const MaterialPage(child: Journal()),
+              MyRoutes.recreationRoute : (_, __) => const MaterialPage(child: Recreation()),
+            },
+          ),
+        );
       },
     );
   }

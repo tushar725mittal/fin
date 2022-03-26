@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:fin/widgets/formButton.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -39,7 +40,16 @@ class _LoginPageState extends State<LoginPage> {
         User? user = auth.currentUser;
         if (user!.emailVerified) {
           // await context.vxNav.push(Uri.parse(MyRoutes.homeRoute), params: {"email": emailController.text});
-          await context.vxNav.push(Uri.parse(MyRoutes.profileRoute));
+          final profileDoc = await FirebaseFirestore.instance
+              .collection("users")
+              .doc(user.uid)
+              .collection("profile")
+              .doc("Basic Profile")
+              .get();
+
+          await context.vxNav.push(Uri.parse(
+            profileDoc.exists ? MyRoutes.homeRoute : MyRoutes.profileRoute,
+          ));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: "Email not verified. Please verify email".text.make()));
@@ -48,7 +58,7 @@ class _LoginPageState extends State<LoginPage> {
         changeButton = false;
         if (e.code == 'user-not-found') {
           print("This email is not registered");
-          
+
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: "User not found. Sign-Up".text.make()));
           await context.vxNav.push(Uri.parse(MyRoutes.signupRoute),
@@ -138,8 +148,13 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(
                       height: 40.0,
-                    ),                      
-                    FormButton(changeButton: changeButton, onTapFunction: signIn, formkey: _formkey, buttonName: "Login",),
+                    ),
+                    FormButton(
+                      changeButton: changeButton,
+                      onTapFunction: signIn,
+                      formkey: _formkey,
+                      buttonName: "Login",
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -150,18 +165,18 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ],
                     ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("Don't have an Account? "),
-                          TextButton(
-                            onPressed: () => context.vxNav.push(
-                                Uri.parse(MyRoutes.signupRoute),
-                                params: {"email": email}),
-                            child: const Text('Signup'),
-                          ),
-                        ],
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("Don't have an Account? "),
+                        TextButton(
+                          onPressed: () => context.vxNav.push(
+                              Uri.parse(MyRoutes.signupRoute),
+                              params: {"email": email}),
+                          child: const Text('Signup'),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),

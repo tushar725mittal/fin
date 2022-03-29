@@ -11,4 +11,5 @@ class MyRoutes {
   static String therapistRoute = "/therapist";
   static String journalRoute = "/journal";
   static String recreationRoute = "/recreation";
+  static String innerchatroomRoute = "/chatroominner";
 }

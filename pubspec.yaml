@@ -35,6 +35,7 @@ dependencies:
   firebase_core: ^1.13.1
   firebase_database: ^9.0.8
   firebase_storage: ^10.2.9
+  http: ^0.13.4
   flutter:
     sdk: flutter
   velocity_x: ^3.4.0

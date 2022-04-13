@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
           routeInformationParser: VxInformationParser(),
           routerDelegate: VxNavigator(
             routes: {
-              "/": (_, __) => const MaterialPage(child: ChatRoom()),      //CHANGE THIS TO HOMEPAGE LATER
+              "/": (_, __) => const MaterialPage(child: LoginPage()),      //CHANGE THIS TO HOMEPAGE LATER
               MyRoutes.loginRoute: (_, __) =>
                   const MaterialPage(child: LoginPage()),
               MyRoutes.resetRoute: (_, __) =>

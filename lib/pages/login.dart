@@ -1,7 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:fin/services/auth_services.dart';
 import 'package:fin/widgets/formButton.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:velocity_x/velocity_x.dart';
@@ -31,44 +30,33 @@ class _LoginPageState extends State<LoginPage> {
         changeButton = true;
       });
 
-      try {
-        await FirebaseAuth.instance
-            .signInWithEmailAndPassword(email: email, password: password);
-        await Future.delayed(const Duration(milliseconds: 1000));
-        final auth = FirebaseAuth.instance;
-        User? user = auth.currentUser;
-        if (user!.emailVerified) {
-          // await context.vxNav.push(Uri.parse(MyRoutes.homeRoute), params: {"email": emailController.text});
-          final profileDoc = await FirebaseFirestore.instance
-              .collection("users")
-              .doc(user.uid)
-              .collection("profile")
-              .doc("Basic Profile")
-              .get();
+      String result = await AuthServices().login(email, password);
 
+      if (result == "User not found. Sign-Up") {
+        changeButton = false;
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: "User not found. Sign-Up".text.make()));
+        await context.vxNav.push(Uri.parse(MyRoutes.signupRoute),
+            params: {"email": emailController.text});
+      } else if (result == "Email and Password does not match") {
+        changeButton = false;
+        await context.vxNav.push(Uri.parse(MyRoutes.verifyRoute));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: "Email and Password does not match".text.make()));
+      }
+      if (result == "Successful") {
+        if (AuthServices().isEmailVerified()) {
           await context.vxNav.push(Uri.parse(
-            profileDoc.exists ? MyRoutes.homeRoute : MyRoutes.profileRoute,
+            (await AuthServices().isProfileAvailable())
+                ? MyRoutes.homeRoute
+                : MyRoutes.profileRoute,
           ));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: "Email not verified. Please verify email".text.make()));
         }
-      } on FirebaseAuthException catch (e) {
-        changeButton = false;
-        if (e.code == 'user-not-found') {
-          print("This email is not registered");
-
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: "User not found. Sign-Up".text.make()));
-          await context.vxNav.push(Uri.parse(MyRoutes.signupRoute),
-              params: {"email": emailController.text});
-        } else if (e.code == 'wrong-password') {
-          print("Email and Password does not match");
-          await context.vxNav.push(Uri.parse(MyRoutes.verifyRoute));
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: "Email and Password does not match".text.make()));
-        }
       }
+
       FocusScopeNode currentFocus = FocusScope.of(context);
 
       if (!currentFocus.hasPrimaryFocus) {

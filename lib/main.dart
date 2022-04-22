@@ -4,7 +4,7 @@ import 'package:fin/pages/home_page.dart';
 import 'package:fin/pages/journal.dart';
 import 'package:fin/pages/login.dart';
 import 'package:fin/pages/profile.dart';
-import 'package:fin/pages/questionnaires.dart';
+import 'package:fin/pages/questionnaire/questionnaire.dart';
 import 'package:fin/pages/recreation.dart';
 import 'package:fin/pages/password_reset.dart';
 import 'package:fin/pages/signup.dart';
@@ -42,7 +42,8 @@ class MyApp extends StatelessWidget {
           routeInformationParser: VxInformationParser(),
           routerDelegate: VxNavigator(
             routes: {
-              "/": (_, __) => const MaterialPage(child: ChatRoom()),      //CHANGE THIS TO HOMEPAGE LATER
+              "/": (_, __) => const MaterialPage(
+                  child: Questionnaire()), //TODO: CHANGE THIS TO HOMEPAGE LATER
               MyRoutes.loginRoute: (_, __) =>
                   const MaterialPage(child: LoginPage()),
               MyRoutes.resetRoute: (_, __) =>
@@ -62,16 +63,16 @@ class MyApp extends StatelessWidget {
               MyRoutes.chatRoomRoute: (_, __) =>
                   const MaterialPage(child: ChatRoom()),
               MyRoutes.questionnairesRoute: (_, __) =>
-                  const MaterialPage(child: Questionnaires()),
+                  const MaterialPage(child: Questionnaire()),
               MyRoutes.therapistRoute: (_, __) =>
                   const MaterialPage(child: Therapist()),
               MyRoutes.journalRoute: (_, __) =>
                   const MaterialPage(child: Journal()),
               MyRoutes.recreationRoute: (_, __) =>
                   const MaterialPage(child: Recreation()),
-              MyRoutes.innerchatroomRoute: (_, params) =>MaterialPage(
-                    child: InnerChat(
-                      code:params['code'],
+              MyRoutes.innerchatroomRoute: (_, params) => MaterialPage(
+                      child: InnerChat(
+                    code: params['code'],
                   )),
             },
           ),

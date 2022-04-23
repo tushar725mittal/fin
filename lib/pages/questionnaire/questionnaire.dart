@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fin/pages/questionnaire/radio_group.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class Questionnaire extends StatelessWidget {
@@ -44,8 +46,46 @@ class _QuestionnaireFormState extends State<QuestionnaireForm> {
 
   Map<int, String?> selectedOptions = {};
 
-  void submit() {
-    print(selectedOptions);
+  void _submit() async {
+    var _ref = FirebaseFirestore.instance;
+    var user = FirebaseAuth.instance.currentUser;
+
+    Map<String, String?> response = {};
+
+    for (int i = 0; i < questions.length; i++) {
+      String question = questions.keys.elementAt(i);
+      response[question] = selectedOptions[i];
+    }
+
+    if (user != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Submitting..."),
+        ),
+      );
+      await _ref
+          .collection('users')
+          .doc(user.uid)
+          .collection('questionnaireResponses')
+          .add(response);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Submitted. Thank you!"),
+          action: SnackBarAction(
+              label: "Dismiss",
+              onPressed: () =>
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar()),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("You must login before submitting the form!"),
+        ),
+      );
+    }
   }
 
   @override
@@ -83,7 +123,7 @@ class _QuestionnaireFormState extends State<QuestionnaireForm> {
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       child: Center(
                         child: ElevatedButton(
-                            onPressed: submit,
+                            onPressed: _submit,
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: const [

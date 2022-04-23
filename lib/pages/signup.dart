@@ -1,9 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:fin/models/user_model.dart';
+import 'package:fin/services/auth_services.dart';
 import 'package:fin/utils/routes.dart';
 import 'package:fin/widgets/formButton.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:velocity_x/velocity_x.dart';
@@ -25,7 +24,6 @@ class _SignUpState extends State<SignUp> {
   final confirmPasswordController = TextEditingController();
   final firstNameController = TextEditingController();
   final secondNameController = TextEditingController();
-  final _auth = FirebaseAuth.instance;
   bool changeButton = false;
   UserModel userModel = UserModel.getModel();
   final _formkey = GlobalKey<FormState>();
@@ -38,50 +36,26 @@ class _SignUpState extends State<SignUp> {
         changeButton = true;
       });
 
-      try {
-        await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(email: email, password: password);
+      String result = await AuthServices().signup(email, password);
+      if (result == "Account created successfully") {
+        await AuthServices().addUserToDataBase(email, password,
+            firstNameController.text, secondNameController.text);
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: "Account created successfully".text.make()));
-        FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-
-        User? user = _auth.currentUser;
-        if(user != null){
-          userModel.email = emailController.text;
-          userModel.uid = user.uid;
-          userModel.firstName = firstNameController.text;
-          userModel.secondName = secondNameController.text;
-
-          await firebaseFirestore
-              .collection("users")
-              .doc(user.uid)
-              .set(userModel.toMap());
-        }
-        
         await Future.delayed(const Duration(milliseconds: 500));
 
         await context.vxNav.push(Uri.parse(MyRoutes.verifyRoute));
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'invalid-email') {
-          print("Your email address appears to be malformed.");
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: "Signing in with Email and Password is not enabled."
-                  .text
-                  .make()));
-        } else if (e.code == 'operation-not-allowed') {
-          print("Signing in with Email and Password is not enabled.");
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: "Signing in with Email and Password is not enabled."
-                  .text
-                  .make()));
-        } else if (e.code == 'too-many-requests') {
-          print("Signing in with Email and Password is not enabled.");
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: "Signing in with Email and Password is not enabled."
-                  .text
-                  .make()));
-        }
+      } else if (result ==
+          "Signing in with Email and Password is not enabled.") {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: "Signing in with Email and Password is not enabled."
+                .text
+                .make()));
+      } else if (result == "Too Many Request Sent. Try after Sometime") {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: "Too Many Request Sent. Try after Sometime".text.make()));
       }
+
       setState(() {
         changeButton = false;
       });
@@ -124,87 +98,91 @@ class _SignUpState extends State<SignUp> {
                 child: Column(
                   children: [
                     TextFormField(
-                        decoration: const InputDecoration(
-                          hintText: "Enter your First Name",
-                          prefixIcon: Icon(Icons.account_circle),
-                          labelText: "First Name",
-                        ),
-                        controller: firstNameController,
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return "First Name cannot be blank";
-                          }
-                          return null;
-                        },
+                      decoration: const InputDecoration(
+                        hintText: "Enter your First Name",
+                        prefixIcon: Icon(Icons.account_circle),
+                        labelText: "First Name",
                       ),
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          hintText: "Enter your Last Name",
-                          prefixIcon: Icon(Icons.account_circle),
-                          labelText: "Last Name",
-                        ),
-                        controller: secondNameController,
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return "Last Name cannot be blank";
-                          }
-                          return null;
-                        },
+                      controller: firstNameController,
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return "First Name cannot be blank";
+                        }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      decoration: const InputDecoration(
+                        hintText: "Enter your Last Name",
+                        prefixIcon: Icon(Icons.account_circle),
+                        labelText: "Last Name",
                       ),
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          hintText: "Enter your Email",
-                          prefixIcon: Icon(CupertinoIcons.mail),
-                          labelText: "Email",
-                        ),
-                        controller: emailController,
-                        validator: (value) {
-                          if (value!.isEmpty ||
-                              !EmailValidator.validate(value)) {
-                            return "Enter valid Email-ID";
-                          }
-                          if (value.isEmpty) {
-                            return "Email-ID cannot be empty";
-                          }
-                          return null;
-                        },
+                      controller: secondNameController,
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return "Last Name cannot be blank";
+                        }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      decoration: const InputDecoration(
+                        hintText: "Enter your Email",
+                        prefixIcon: Icon(CupertinoIcons.mail),
+                        labelText: "Email",
                       ),
-                      TextFormField(
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          hintText: "Enter password",
-                          prefixIcon: Icon(Icons.password),
-                          labelText: "Password",
-                        ),
-                        controller: passwordController,
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return "Password cannot be empty";
-                          } else if (value.length < 6) {
-                            return "Length of password should be atleast 6";
-                          }
-                          return null;
-                        },
+                      controller: emailController,
+                      validator: (value) {
+                        if (value!.isEmpty || !EmailValidator.validate(value)) {
+                          return "Enter valid Email-ID";
+                        }
+                        if (value.isEmpty) {
+                          return "Email-ID cannot be empty";
+                        }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        hintText: "Enter password",
+                        prefixIcon: Icon(Icons.password),
+                        labelText: "Password",
                       ),
-                      TextFormField(
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          hintText: "Enter password",
-                          prefixIcon: Icon(Icons.password),
-                          labelText: "Confirm Password",
-                        ),
-                        controller: confirmPasswordController,
-                        validator: (value) {
-                          if (passwordController.text != value) {
-                            return "Password does not match";
-                          }
-                          return null;
-                        },
+                      controller: passwordController,
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return "Password cannot be empty";
+                        } else if (value.length < 6) {
+                          return "Length of password should be atleast 6";
+                        }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        hintText: "Enter password",
+                        prefixIcon: Icon(Icons.password),
+                        labelText: "Confirm Password",
                       ),
+                      controller: confirmPasswordController,
+                      validator: (value) {
+                        if (passwordController.text != value) {
+                          return "Password does not match";
+                        }
+                        return null;
+                      },
+                    ),
                     const SizedBox(
                       height: 40.0,
                     ),
-                    FormButton(changeButton: changeButton, onTapFunction: signUp, formkey: _formkey, buttonName: "Sign Up",),
+                    FormButton(
+                      changeButton: changeButton,
+                      onTapFunction: signUp,
+                      formkey: _formkey,
+                      buttonName: "Sign Up",
+                    ),
                   ],
                 ),
               ),

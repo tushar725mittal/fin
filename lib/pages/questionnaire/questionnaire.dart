@@ -1,4 +1,3 @@
-import 'package:fin/pages/questionnaire/options.dart';
 import 'package:fin/pages/questionnaire/radio_group.dart';
 import 'package:flutter/material.dart';
 
@@ -43,7 +42,7 @@ class _QuestionnaireFormState extends State<QuestionnaireForm> {
     ],
   };
 
-  Map<int, Options?> selectedOptions = {};
+  Map<int, String?> selectedOptions = {};
 
   void submit() {
     print(selectedOptions);
@@ -70,6 +69,7 @@ class _QuestionnaireFormState extends State<QuestionnaireForm> {
                               questions.keys.elementAt(questionIndex)),
                         ),
                         RadioGroup(
+                          options: questions.values.elementAt(questionIndex),
                           currentlySelected: selectedOptions[questionIndex],
                           onChanged: (value) {
                             setState(() {

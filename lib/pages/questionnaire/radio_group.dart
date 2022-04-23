@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
-import 'options.dart';
 
 class RadioGroup extends StatelessWidget {
-  final Options? currentlySelected;
-  final Function(Options?) onChanged;
+  final List<String> options;
+  final String? currentlySelected;
+  final Function(String?) onChanged;
 
-  const RadioGroup(
-      {Key? key, required this.currentlySelected, required this.onChanged})
-      : super(key: key);
+  const RadioGroup({
+    Key? key,
+    required this.options,
+    required this.currentlySelected,
+    required this.onChanged,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: Options.values
+      children: options
           .map(
-            (option) => RadioListTile<Options>(
-              title: Text(option.name),
+            (option) => RadioListTile(
+              title: Text(option),
               value: option,
               groupValue: currentlySelected,
-              onChanged: (Options? value) {
-                onChanged(value);
+              onChanged: (String? value) {
+                onChanged(value!);
               },
             ),
           )
